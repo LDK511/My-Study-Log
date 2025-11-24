@@ -4,9 +4,8 @@
   <meta charset="UTF-8" />
   <title>Study Log</title>
 
-<link rel="apple-touch-icon" href="Study_Log_icon.png">
-<link rel="icon" type="image/png" href="Study_Log_icon.png">
-
+  <link rel="apple-touch-icon" href="Study_Log_icon.png">
+  <link rel="icon" type="image/png" href="Study_Log_icon.png">
 
   <style>
     body {
@@ -405,6 +404,31 @@
       background: #43a047;
     }
 
+    /* 백업 버튼도 추가 버튼과 같은 스타일 */
+    .backup-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    #backup-export-btn,
+    #backup-import-btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: #4caf50;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #backup-export-btn:hover,
+    #backup-import-btn:hover {
+      background: #43a047;
+    }
+
     /* Q&A 버튼 */
     #qa-btn {
       padding: 6px 10px;
@@ -661,6 +685,13 @@
             <button id="add-todo-btn">추가</button>
             <button id="qa-btn">Q&A</button>
           </div>
+
+          <!-- 백업 버튼: 추가/Q&A 보다 한 줄 아래 -->
+          <div class="backup-row">
+            <button id="backup-export-btn">백업 저장</button>
+            <button id="backup-import-btn">백업 불러오기</button>
+            <input type="file" id="backup-file-input" accept="application/json" style="display:none;">
+          </div>
         </div>
       </div>
     </div>
@@ -701,8 +732,8 @@
   </div>
 
   <script>
-
-(async () => {
+    // 가능한 경우 storage를 "영구 모드"로 요청
+    (async () => {
       if (navigator.storage && navigator.storage.persist) {
         const isPersisted = await navigator.storage.persisted();
         if (!isPersisted) {
@@ -710,7 +741,6 @@
         }
       }
     })();
-
 
     // 오늘 날짜 계산
     const now = new Date();
@@ -770,6 +800,10 @@
     const qaRandomQuestion = document.getElementById('qa-random-question');
     const qaRandomAnswer = document.getElementById('qa-random-answer');
     const qaRandomRefresh = document.getElementById('qa-random-refresh');
+
+    const backupExportBtn = document.getElementById('backup-export-btn');
+    const backupImportBtn = document.getElementById('backup-import-btn');
+    const backupFileInput = document.getElementById('backup-file-input');
 
     // 상태
     let items = [];
@@ -925,16 +959,16 @@
         storedCategories.push(cat);
         saveCategories();
       }
-      currentCategoryFilter = cat;      // 이 카테고리로 고정
-      categoryInput.value = '';         // 입력창은 비워주고
-      refreshCategoryFilterOptions();   // 드롭다운 갱신
-      renderChecklist();                // 필터 반영
+      currentCategoryFilter = cat;
+      categoryInput.value = '';
+      refreshCategoryFilterOptions();
+      renderChecklist();
     });
 
     // 카테고리 삭제: 선택된 카테고리 제거
     categoryDeleteBtn.addEventListener('click', () => {
       const sel = categoryFilter.value;
-      if (sel === 'all') return; // All은 삭제 X
+      if (sel === 'all') return;
       storedCategories = storedCategories.filter((c) => c !== sel);
       saveCategories();
       if (currentCategoryFilter === sel) {
@@ -967,7 +1001,6 @@
       const mmRem = totalMinutes % 60;
       studyTimeSummary.textContent = `공부 시간(누적): ${hh}시간 ${mmRem}분`;
 
-      // 체크 목표: 비워두면 자동으로 totalSub 기준
       let effectiveGoalChecks;
       if (goalChecks != null && goalChecks > 0) {
         effectiveGoalChecks = goalChecks;
@@ -1026,7 +1059,6 @@
     goalMinutesInput.addEventListener('change', recalcGoalMinutesFromInputs);
 
     // ----- 타이머 관련 -----
-    // ▶ 표시만 "분" 단위로
     function formatTime(seconds) {
       const s = Math.max(0, Math.floor(seconds || 0));
       const totalMinutes = Math.floor(s / 60);
@@ -1076,7 +1108,6 @@
       display.textContent = formatTime(item.totalSeconds || 0);
     }
 
-    // 1초마다 타이머 표시 업데이트 (표시는 분 단위)
     setInterval(() => {
       const nowMs = Date.now();
       const displays = document.querySelectorAll('.timer-display');
@@ -1112,7 +1143,6 @@
         const row = document.createElement('div');
         row.className = 'checklist-item';
 
-        // 왼쪽: 메인 텍스트 + 카테고리
         const mainDiv = document.createElement('div');
         mainDiv.className = 'check-main';
 
@@ -1136,7 +1166,6 @@
           mainDiv.appendChild(badge);
         }
 
-        // 타이머 박스
         const timerBox = document.createElement('div');
         timerBox.className = 'timer-box';
         timerBox.dataset.itemId = String(item.id);
@@ -1160,7 +1189,6 @@
         timerBox.appendChild(timeSpan);
         timerBox.appendChild(timerBtn);
 
-        // 서브 체크 그룹
         const subGroup = document.createElement('div');
         subGroup.className = 'subcheck-group';
 
@@ -1228,7 +1256,6 @@
         subGroup.appendChild(subRow);
         subGroup.appendChild(subAddBtn);
 
-        // 삭제 버튼
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = '삭제';
         deleteBtn.className = 'delete-btn';
@@ -1256,11 +1283,9 @@
       if (!text) return;
 
       let cat = '';
-      // 현재 필터가 All이 아니면 그 카테고리로 고정해서 추가
       if (currentCategoryFilter !== 'all') {
         cat = currentCategoryFilter;
       } else {
-        // All 상태일 때는 입력창에 적힌 값이 있으면 그걸 카테고리로 사용 (등록과는 별개)
         const typedCat = categoryInput.value.trim();
         if (typedCat) {
           cat = typedCat;
@@ -1417,6 +1442,108 @@
       pickRandomQa();
     });
 
+    // ----- 백업 / 복원 기능 -----
+    function exportBackup() {
+      const backup = {
+        generatedAt: new Date().toISOString(),
+        daily: {},
+        qa: [],
+        categories: [],
+      };
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(DAILY_PREFIX)) {
+          try {
+            backup.daily[key] = JSON.parse(localStorage.getItem(key));
+          } catch (e) {
+            console.error('backup daily parse error', key, e);
+          }
+        }
+      }
+
+      try {
+        const qaRaw = localStorage.getItem(QA_KEY);
+        backup.qa = qaRaw ? JSON.parse(qaRaw) : [];
+      } catch (e) {
+        console.error('backup qa parse error', e);
+      }
+
+      try {
+        const catRaw = localStorage.getItem(CATEGORIES_KEY);
+        backup.categories = catRaw ? JSON.parse(catRaw) : [];
+      } catch (e) {
+        console.error('backup categories parse error', e);
+      }
+
+      const blob = new Blob([JSON.stringify(backup, null, 2)], {
+        type: 'application/json',
+      });
+
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const d = String(today.getDate()).padStart(2, '0');
+      const fileName = `StudyLogBackup_${y}-${m}-${d}.json`;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      alert('백업 파일을 저장했습니다!');
+    }
+
+    function importBackup(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target.result;
+          const backup = JSON.parse(text);
+
+          if (backup.daily && typeof backup.daily === 'object') {
+            Object.keys(backup.daily).forEach((key) => {
+              localStorage.setItem(key, JSON.stringify(backup.daily[key]));
+            });
+          }
+
+          if (Array.isArray(backup.qa)) {
+            localStorage.setItem(QA_KEY, JSON.stringify(backup.qa));
+          }
+
+          if (Array.isArray(backup.categories)) {
+            localStorage.setItem(CATEGORIES_KEY, JSON.stringify(backup.categories));
+          }
+
+          alert('백업 데이터를 복원했습니다. 페이지를 새로고침합니다.');
+          location.reload();
+        } catch (err) {
+          console.error('backup import error', err);
+          alert('백업 파일을 읽는 중 오류가 발생했습니다.');
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    backupExportBtn.addEventListener('click', () => {
+      exportBackup();
+    });
+
+    backupImportBtn.addEventListener('click', () => {
+      backupFileInput.click();
+    });
+
+    backupFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      importBackup(file);
+      e.target.value = '';
+    });
+
     // ----- 월별 캘린더 & 리포트 -----
     function renderMonthView() {
       calendarEl.innerHTML = '';
@@ -1447,12 +1574,10 @@
 
             let totalSub = 0;
             let doneSub = 0;
-            let daySeconds = 0;
             state.items.forEach((it) => {
               const subs = it.subchecks || [];
               totalSub += subs.length;
               doneSub += subs.filter((sc) => sc.checked).length;
-              daySeconds += it.totalSeconds || 0;
             });
             const percent = totalSub > 0 ? Math.round((doneSub / totalSub) * 100) : 0;
             const hasStudy = state.items.length > 0;
