@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Study Log</title>
+
+  <link rel="apple-touch-icon" href="Study_Log_icon.png">
+  <link rel="icon" type="image/png" href="Study_Log_icon.png">
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 20px 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    /* 상단 제목 + 날짜 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      text-align: center;
+      flex: 1;
+    }
+
+    .date-display {
+      font-size: 12px;
+      color: #666;
+      text-align: right;
+      min-width: 90px;
+    }
+
+    /* 탭 영역 */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 6px 0;
+      font-size: 13px;
+      border-radius: 999px;
+      border: 1px solid #ccc;
+      background: #f9f9f9;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: #4caf50;
+      color: #fff;
+      border-color: #4caf50;
+    }
+
+    h2 {
+      font-size: 16px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    /* 진행도 / 목표 영역 */
+    #progress-container {
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+
+    #progress-text {
+      margin-bottom: 2px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #eee;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    #progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #4caf50;
+      transition: width 0.3s;
+    }
+
+    .goal-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .goal-row label {
+      font-size: 12px;
+    }
+
+    .goal-row input {
+      width: 60px;
+      padding: 2px 4px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    #goal-status,
+    #study-time-summary {
+      font-size: 11px;
+      color: #555;
+      margin-bottom: 2px;
+    }
+
+    /* 카테고리 영역 */
+    .category-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 6px 0 8px;
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+
+    #category-filter {
+      padding: 2px 4px;
+      font-size: 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    #category-input {
+      flex: 1;
+      min-width: 0;
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 12px;
+    }
+
+    #category-add-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid #4caf50;
+      background: #ffffff;
+      color: #4caf50;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #category-add-btn:hover {
+      background: #e8f5e9;
+    }
+
+    /* 카테고리 삭제 버튼 */
+    #category-delete-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid #e53935;
+      background: #ffffff;
+      color: #e53935;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #category-delete-btn:hover {
+      background: #ffebee;
+    }
+
+    /* 체크리스트 아이템 */
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 0;
+    }
+
+    .check-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .item-text {
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      padding: 4px 0;
+      border-bottom: 1px dashed transparent;
+    }
+
+    .item-text:focus {
+      outline: none;
+      border-bottom-color: #ccc;
+    }
+
+    .category-badge {
+      font-size: 11px;
+      color: #666;
+      background: #f0f0f0;
+      padding: 1px 6px;
+      border-radius: 999px;
+      align-self: flex-start;
+    }
+
+    .timer-box {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      min-width: 80px;
+      font-size: 11px;
+    }
+
+    .timer-display {
+      font-size: 11px;
+      color: #555;
+      text-align: right;
+    }
+
+    .timer-btn {
+      border: 1px solid #ccc;
+      background: #ffffff;
+      border-radius: 999px;
+      padding: 2px 6px;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .timer-btn.running {
+      background: #ffebee;
+      border-color: #e53935;
+      color: #e53935;
+    }
+
+    .delete-btn {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 12px;
+      color: #888;
+      margin-left: 4px;
+      white-space: nowrap;
+    }
+
+    .delete-btn:hover {
+      color: #e53935;
+    }
+
+    /* 서브 체크 그룹 전체 */
+    .subcheck-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: flex-end;
+      min-width: 120px;
+      flex-shrink: 0;
+    }
+
+    /* 서브 체크들 가로 배치 */
+    .subcheck-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      justify-content: flex-end;
+    }
+
+    .subcheck {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      font-size: 11px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 2px 4px;
+      background: #fafafa;
+    }
+
+    .subcheck input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .subcheck-label {
+      border: none;
+      background: transparent;
+      font-size: 11px;
+      padding: 0;
+      margin: 0;
+    }
+
+    .subcheck-label:focus {
+      outline: none;
+      border-bottom: 1px dashed #ccc;
+    }
+
+    .subcheck-delete {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 10px;
+      color: #999;
+    }
+
+    .subcheck-delete:hover {
+      color: #e53935;
+    }
+
+    .subcheck-add-btn {
+      border: 1px dashed #aaa;
+      background: #ffffff;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .subcheck-add-btn:hover {
+      background: #f0f0f0;
+    }
+
+    .todo-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
+
+    .toggle-btn {
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 999px;
+      border: 1px solid #ccc;
+      background: #f0f0f0;
+      cursor: pointer;
+    }
+
+    .toggle-btn:hover {
+      background: #e5e5e5;
+    }
+
+    .todo-section-body {
+      border-top: 1px solid #eee;
+      padding-top: 10px;
+      margin-top: 4px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .todo-input-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    #todo-input {
+      flex: 1;
+      min-width: 0;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    #add-todo-btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: #4caf50;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #add-todo-btn:hover {
+      background: #43a047;
+    }
+
+    /* 백업 버튼도 추가 버튼과 같은 스타일 */
+    .backup-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    #backup-export-btn,
+    #backup-import-btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: #4caf50;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #backup-export-btn:hover,
+    #backup-import-btn:hover {
+      background: #43a047;
+    }
+
+    /* Q&A 버튼 */
+    #qa-btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px dashed #4caf50;
+      background: #ffffff;
+      color: #4caf50;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #qa-btn:hover {
+      background: #e8f5e9;
+    }
+
+    /* Q&A 영역 */
+    #qa-section {
+      margin-top: 10px;
+    }
+
+    .qa-input-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    #qa-question,
+    #qa-answer {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+
+    #qa-answer {
+      min-height: 60px;
+      resize: vertical;
+    }
+
+    #qa-add-btn {
+      align-self: flex-end;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: none;
+      background: #4caf50;
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    #qa-add-btn:hover {
+      background: #43a047;
+    }
+
+    .qa-item {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 8px;
+      background: #fafafa;
+    }
+
+    .qa-question-text {
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    .qa-answer-text {
+      font-size: 12px;
+      color: #444;
+      white-space: pre-wrap;
+    }
+
+    .qa-delete-btn {
+      margin-top: 4px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 11px;
+      color: #999;
+    }
+
+    .qa-delete-btn:hover {
+      color: #e53935;
+    }
+
+    /* 랜덤 Q&A 박스 */
+    #qa-random-box {
+      border: 1px dashed #ccc;
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 10px;
+      background: #fcfcfc;
+      font-size: 12px;
+    }
+
+    #qa-random-question {
+      font-weight: 600;
+      margin-bottom: 4px;
+      white-space: pre-wrap;
+    }
+
+    #qa-random-answer {
+      white-space: pre-wrap;
+      color: #444;
+    }
+
+    #qa-random-refresh {
+      margin-top: 4px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #fff;
+      font-size: 11px;
+      padding: 2px 6px;
+      cursor: pointer;
+    }
+
+    #qa-random-refresh:hover {
+      background: #f0f0f0;
+    }
+
+    /* 월별 캘린더 & 리포트 */
+    #month-section {
+      margin-top: 10px;
+    }
+
+    #calendar {
+      margin-top: 6px;
+      margin-bottom: 10px;
+    }
+
+    .calendar-grid {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .calendar-grid th,
+    .calendar-grid td {
+      border: 1px solid #eee;
+      width: 14.28%;
+      vertical-align: top;
+      padding: 4px;
+      text-align: left;
+    }
+
+    .calendar-grid th {
+      background: #fafafa;
+      text-align: center;
+    }
+
+    .calendar-empty {
+      background: #fafafa;
+    }
+
+    .calendar-day-number {
+      font-weight: 600;
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+
+    .calendar-day-summary {
+      font-size: 10px;
+      color: #555;
+    }
+
+    .today-cell {
+      background: #e8f5e9;
+    }
+
+    #month-report {
+      font-size: 12px;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 상단 제목 + 날짜 -->
+    <div class="header">
+      <h1>Study Log</h1>
+      <div id="today-date" class="date-display"></div>
+    </div>
+
+    <!-- 탭: 오늘 / 이번 달 -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="day">오늘</button>
+      <button class="tab-btn" data-tab="month">이번 달</button>
+    </div>
+
+    <!-- 체크리스트 + 입력 영역 -->
+    <div id="checklist-section">
+      <h2>Today</h2>
+
+      <!-- 진행도 / 목표 -->
+      <div id="progress-container">
+        <div id="progress-text">Progress: 0 / 0 (0%)</div>
+        <div class="progress-bar">
+          <div id="progress-bar-fill"></div>
+        </div>
+        <div class="goal-row">
+          <label>
+            체크 목표:
+            <input type="number" id="goal-checks-input" min="0" />
+          </label>
+          <label>
+            공부 시간 목표:
+            <input type="number" id="goal-hours-input" min="0" placeholder="0" />시간
+            <input type="number" id="goal-minutes-input" min="0" placeholder="0" />분
+          </label>
+        </div>
+        <div id="goal-status"></div>
+        <div id="study-time-summary"></div>
+      </div>
+
+      <!-- 카테고리 선택 / 입력 -->
+      <div class="category-row">
+        <span>Category:</span>
+        <select id="category-filter">
+          <option value="all">All</option>
+        </select>
+        <input
+          type="text"
+          id="category-input"
+          placeholder="새 카테고리 이름"
+        />
+        <button id="category-add-btn">등록</button>
+        <button id="category-delete-btn">삭제</button>
+      </div>
+
+      <!-- 체크리스트 목록 -->
+      <div id="checklist" class="checklist"></div>
+
+      <!-- 입력 영역 -->
+      <div class="todo-section">
+        <div class="todo-section-header">
+          <h2>목록 추가</h2>
+          <button id="toggle-todo-btn" class="toggle-btn">입력창 접기</button>
+        </div>
+
+        <div id="todo-body" class="todo-section-body">
+          <div class="todo-input-row">
+            <input
+              type="text"
+              id="todo-input"
+              placeholder="여기에 해야 할 일을 입력하고 Enter 또는 [추가] 버튼을 누르세요."
+            />
+            <button id="add-todo-btn">추가</button>
+            <button id="qa-btn">Q&A</button>
+          </div>
+
+          <!-- 백업 버튼: 추가/Q&A 보다 한 줄 아래 -->
+          <div class="backup-row">
+            <button id="backup-export-btn">백업 저장</button>
+            <button id="backup-import-btn">백업 불러오기</button>
+            <input type="file" id="backup-file-input" accept="application/json" style="display:none;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 월별 캘린더 + 리포트 -->
+    <div id="month-section" class="hidden">
+      <h2>Month</h2>
+      <div id="calendar"></div>
+      <div id="month-report"></div>
+    </div>
+
+    <!-- Q&A 섹션 (오답노트) -->
+    <div id="qa-section" class="hidden">
+      <h2>Q&A (오답 노트)</h2>
+
+      <!-- 랜덤 Q&A -->
+      <div id="qa-random-box" class="hidden">
+        <div style="font-size:11px; color:#666; margin-bottom:2px;">오늘의 랜덤 복습</div>
+        <div id="qa-random-question"></div>
+        <div id="qa-random-answer"></div>
+        <button id="qa-random-refresh">다시 뽑기</button>
+      </div>
+
+      <div class="qa-input-row">
+        <input
+          type="text"
+          id="qa-question"
+          placeholder="질문 / 모르는 내용"
+        />
+        <textarea
+          id="qa-answer"
+          placeholder="정리 / 답 / 참고 메모"
+        ></textarea>
+        <button id="qa-add-btn">Q&A 추가</button>
+      </div>
+      <div id="qa-list"></div>
+    </div>
+  </div>
+
+  <script>
+    // 가능한 경우 storage를 "영구 모드"로 요청
+    (async () => {
+      if (navigator.storage && navigator.storage.persist) {
+        const isPersisted = await navigator.storage.persisted();
+        if (!isPersisted) {
+          await navigator.storage.persist();
+        }
+      }
+    })();
+
+    // 오늘 날짜 계산
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+
+    const todayString = `${yyyy}-${mm}-${dd}`;
+    const monthString = `${yyyy}-${mm}`;
+
+    const dateDisplay = document.getElementById('today-date');
+
+    // 스토리지 키
+    const DAILY_PREFIX = 'studylog_day_';
+    const QA_KEY = 'studylog_qa_notes';
+    const CATEGORIES_KEY = 'studylog_categories';
+
+    // 상태: 'day' | 'month' | 'qa'
+    let activeTab = 'day';
+    let selectedDateStr = todayString;
+
+    // DOM 요소들
+    const checklistSection = document.getElementById('checklist-section');
+    const monthSection = document.getElementById('month-section');
+    const qaSection = document.getElementById('qa-section');
+
+    const checklistContainer = document.getElementById('checklist');
+    const todoInput = document.getElementById('todo-input');
+    const addTodoBtn = document.getElementById('add-todo-btn');
+    const qaBtn = document.getElementById('qa-btn');
+    const toggleBtn = document.getElementById('toggle-todo-btn');
+    const todoBody  = document.getElementById('todo-body');
+    const tabButtons = document.querySelectorAll('.tab-btn');
+
+    const goalChecksInput = document.getElementById('goal-checks-input');
+    const goalHoursInput = document.getElementById('goal-hours-input');
+    const goalMinutesInput = document.getElementById('goal-minutes-input');
+    const progressText = document.getElementById('progress-text');
+    const progressBarFill = document.getElementById('progress-bar-fill');
+    const goalStatus = document.getElementById('goal-status');
+    const studyTimeSummary = document.getElementById('study-time-summary');
+
+    const categoryInput = document.getElementById('category-input');
+    const categoryFilter = document.getElementById('category-filter');
+    const categoryAddBtn = document.getElementById('category-add-btn');
+    const categoryDeleteBtn = document.getElementById('category-delete-btn');
+
+    const calendarEl = document.getElementById('calendar');
+    const monthReportEl = document.getElementById('month-report');
+
+    const qaQuestionInput = document.getElementById('qa-question');
+    const qaAnswerInput = document.getElementById('qa-answer');
+    const qaAddBtn = document.getElementById('qa-add-btn');
+    const qaList = document.getElementById('qa-list');
+
+    const qaRandomBox = document.getElementById('qa-random-box');
+    const qaRandomQuestion = document.getElementById('qa-random-question');
+    const qaRandomAnswer = document.getElementById('qa-random-answer');
+    const qaRandomRefresh = document.getElementById('qa-random-refresh');
+
+    const backupExportBtn = document.getElementById('backup-export-btn');
+    const backupImportBtn = document.getElementById('backup-import-btn');
+    const backupFileInput = document.getElementById('backup-file-input');
+
+    // 상태
+    let items = [];
+    let goalChecks = null;
+    let goalMinutes = null;
+    let qaItems = [];
+    let currentCategoryFilter = 'all';
+    let storedCategories = [];
+
+    // 타이머: itemId -> { startTime, baseSeconds }
+    const runningTimers = {};
+
+    function updateDateDisplay() {
+      if (activeTab === 'day') {
+        dateDisplay.textContent = selectedDateStr;
+      } else if (activeTab === 'month') {
+        dateDisplay.textContent = monthString;
+      } else {
+        dateDisplay.textContent = 'Q&A';
+      }
+    }
+
+    function generateId() {
+      return Date.now() + Math.random();
+    }
+
+    // ----- 카테고리 저장/로드 -----
+    function loadCategories() {
+      try {
+        const raw = localStorage.getItem(CATEGORIES_KEY);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.filter(Boolean) : [];
+      } catch (e) {
+        console.error('category load error', e);
+        return [];
+      }
+    }
+
+    function saveCategories() {
+      localStorage.setItem(CATEGORIES_KEY, JSON.stringify(storedCategories));
+    }
+
+    // ----- 체크리스트 상태 로드/저장 -----
+    function normalizeItems(rawItems) {
+      if (!Array.isArray(rawItems)) return [];
+      return rawItems.map((it) => {
+        let subs = Array.isArray(it.subchecks)
+          ? it.subchecks.map((sc) => ({
+              id: sc.id ?? generateId(),
+              checked: !!sc.checked,
+              label: sc.label ?? '',
+            }))
+          : [];
+        if (subs.length === 0) {
+          subs.push({
+            id: generateId(),
+            checked: false,
+            label: '',
+          });
+        }
+        return {
+          id: it.id ?? generateId(),
+          text: it.text ?? '',
+          category: it.category ?? '',
+          totalSeconds: it.totalSeconds ?? 0,
+          subchecks: subs,
+        };
+      });
+    }
+
+    function loadChecklistStateFor(dateStr) {
+      try {
+        const raw = localStorage.getItem(DAILY_PREFIX + dateStr);
+        if (!raw) {
+          return { items: [], goalChecks: null, goalMinutes: null };
+        }
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return { items: normalizeItems(parsed), goalChecks: null, goalMinutes: null };
+        } else if (parsed && typeof parsed === 'object') {
+          const rawItems = Array.isArray(parsed.items) ? parsed.items : [];
+          return {
+            items: normalizeItems(rawItems),
+            goalChecks: parsed.goalChecks ?? null,
+            goalMinutes: parsed.goalMinutes ?? null,
+          };
+        }
+      } catch (e) {
+        console.error('load error', e);
+      }
+      return { items: [], goalChecks: null, goalMinutes: null };
+    }
+
+    function saveCurrentChecklistState() {
+      const state = {
+        items,
+        goalChecks,
+        goalMinutes,
+      };
+      localStorage.setItem(DAILY_PREFIX + selectedDateStr, JSON.stringify(state));
+    }
+
+    function applyChecklistState(state) {
+      items = state.items || [];
+      goalChecks = state.goalChecks ?? null;
+      goalMinutes = state.goalMinutes ?? null;
+      refreshCategoryFilterOptions();
+      updateGoalInputsFromState();
+      renderChecklist();
+    }
+
+    function updateGoalInputsFromState() {
+      goalChecksInput.value = goalChecks ?? '';
+      if (goalMinutes != null && goalMinutes > 0) {
+        const h = Math.floor(goalMinutes / 60);
+        const m = goalMinutes % 60;
+        goalHoursInput.value = h;
+        goalMinutesInput.value = m;
+      } else {
+        goalHoursInput.value = '';
+        goalMinutesInput.value = '';
+      }
+    }
+
+    // ----- 카테고리 옵션 갱신 -----
+    function refreshCategoryFilterOptions() {
+      const prev = currentCategoryFilter;
+
+      categoryFilter.innerHTML = '<option value="all">All</option>';
+      storedCategories.slice().sort().forEach((c) => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        categoryFilter.appendChild(opt);
+      });
+
+      const hasPrev = prev === 'all' || storedCategories.includes(prev);
+      currentCategoryFilter = hasPrev ? prev : 'all';
+      categoryFilter.value = currentCategoryFilter;
+    }
+
+    categoryFilter.addEventListener('change', () => {
+      currentCategoryFilter = categoryFilter.value;
+      renderChecklist();
+    });
+
+    // 카테고리 등록: 저장 + 현재 카테고리로 고정
+    categoryAddBtn.addEventListener('click', () => {
+      const cat = categoryInput.value.trim();
+      if (!cat) return;
+      if (!storedCategories.includes(cat)) {
+        storedCategories.push(cat);
+        saveCategories();
+      }
+      currentCategoryFilter = cat;
+      categoryInput.value = '';
+      refreshCategoryFilterOptions();
+      renderChecklist();
+    });
+
+    // 카테고리 삭제: 선택된 카테고리 제거
+    categoryDeleteBtn.addEventListener('click', () => {
+      const sel = categoryFilter.value;
+      if (sel === 'all') return;
+      storedCategories = storedCategories.filter((c) => c !== sel);
+      saveCategories();
+      if (currentCategoryFilter === sel) {
+        currentCategoryFilter = 'all';
+      }
+      refreshCategoryFilterOptions();
+      renderChecklist();
+    });
+
+    // ----- 진행도 / 목표 / 시간 요약 -----
+    function updateProgressAndGoals() {
+      let totalSub = 0;
+      let doneSub = 0;
+      let totalSeconds = 0;
+
+      items.forEach((item) => {
+        const subs = item.subchecks || [];
+        totalSub += subs.length;
+        doneSub += subs.filter((sc) => sc.checked).length;
+        totalSeconds += item.totalSeconds || 0;
+      });
+
+      const percent = totalSub > 0 ? Math.round((doneSub / totalSub) * 100) : 0;
+
+      progressText.textContent = `Progress: ${doneSub} / ${totalSub} (${percent}%)`;
+      progressBarFill.style.width = `${percent}%`;
+
+      const totalMinutes = Math.floor(totalSeconds / 60);
+      const hh = Math.floor(totalMinutes / 60);
+      const mmRem = totalMinutes % 60;
+      studyTimeSummary.textContent = `공부 시간(누적): ${hh}시간 ${mmRem}분`;
+
+      let effectiveGoalChecks;
+      if (goalChecks != null && goalChecks > 0) {
+        effectiveGoalChecks = goalChecks;
+      } else {
+        effectiveGoalChecks = totalSub;
+      }
+
+      let goalText = '';
+
+      if (effectiveGoalChecks > 0) {
+        const pctG = Math.min(100, Math.round((doneSub / effectiveGoalChecks) * 100));
+        if (goalChecks != null && goalChecks > 0) {
+          goalText += `체크 목표: ${doneSub} / ${goalChecks} (${pctG}%)`;
+        } else {
+          goalText += `체크 목표: ${doneSub} / ${totalSub} (${pctG}%, 자동 설정)`;
+        }
+      } else {
+        goalText += `체크 목표: 0 / 0 (자동 설정)`;
+      }
+
+      goalText += ' | ';
+
+      if (goalMinutes != null && goalMinutes > 0) {
+        const pctT = Math.min(100, Math.round((totalMinutes / goalMinutes) * 100));
+        goalText += `시간 목표: ${totalMinutes} / ${goalMinutes}분 (${pctT}%)`;
+      } else {
+        goalText += `시간 목표: 설정 없음`;
+      }
+
+      goalStatus.textContent = goalText;
+    }
+
+    goalChecksInput.addEventListener('change', () => {
+      const v = parseInt(goalChecksInput.value, 10);
+      if (Number.isNaN(v) || v <= 0) {
+        goalChecks = null;
+      } else {
+        goalChecks = v;
+      }
+      saveCurrentChecklistState();
+      updateProgressAndGoals();
+    });
+
+    function recalcGoalMinutesFromInputs() {
+      const h = parseInt(goalHoursInput.value, 10);
+      const m = parseInt(goalMinutesInput.value, 10);
+      const hh = Number.isNaN(h) ? 0 : Math.max(0, h);
+      const mm = Number.isNaN(m) ? 0 : Math.max(0, m);
+      const total = hh * 60 + mm;
+      goalMinutes = total > 0 ? total : null;
+      saveCurrentChecklistState();
+      updateProgressAndGoals();
+    }
+
+    goalHoursInput.addEventListener('change', recalcGoalMinutesFromInputs);
+    goalMinutesInput.addEventListener('change', recalcGoalMinutesFromInputs);
+
+    // ----- 타이머 관련 -----
+    function formatTime(seconds) {
+      const s = Math.max(0, Math.floor(seconds || 0));
+      const totalMinutes = Math.floor(s / 60);
+      return `${totalMinutes}분`;
+    }
+
+    function toggleTimer(itemId) {
+      const idStr = String(itemId);
+      const running = runningTimers[idStr];
+      const item = items.find((it) => String(it.id) === idStr);
+      if (!item) return;
+
+      if (running) {
+        const nowMs = Date.now();
+        const deltaSec = Math.floor((nowMs - running.startTime) / 1000);
+        item.totalSeconds = (item.totalSeconds || 0) + deltaSec;
+        delete runningTimers[idStr];
+        saveCurrentChecklistState();
+        updateProgressAndGoals();
+      } else {
+        runningTimers[idStr] = {
+          startTime: Date.now(),
+          baseSeconds: item.totalSeconds || 0,
+        };
+      }
+      updateTimerUIForItem(itemId);
+    }
+
+    function updateTimerUIForItem(itemId) {
+      const idStr = String(itemId);
+      const timerBox = document.querySelector(
+        `.timer-box[data-item-id="${idStr}"]`
+      );
+      if (!timerBox) return;
+      const btn = timerBox.querySelector('.timer-btn');
+      const display = timerBox.querySelector('.timer-display');
+      const item = items.find((it) => String(it.id) === idStr);
+      if (!item) return;
+      const running = runningTimers[idStr];
+      if (running) {
+        btn.textContent = 'Stop';
+        btn.classList.add('running');
+      } else {
+        btn.textContent = 'Start';
+        btn.classList.remove('running');
+      }
+      display.textContent = formatTime(item.totalSeconds || 0);
+    }
+
+    setInterval(() => {
+      const nowMs = Date.now();
+      const displays = document.querySelectorAll('.timer-display');
+      displays.forEach((span) => {
+        const idStr = span.dataset.itemId;
+        const item = items.find((it) => String(it.id) === idStr);
+        if (!item) return;
+        const running = runningTimers[idStr];
+        let secs = item.totalSeconds || 0;
+        if (running) {
+          const deltaSec = Math.floor((nowMs - running.startTime) / 1000);
+          secs = running.baseSeconds + deltaSec;
+        }
+        span.textContent = formatTime(secs);
+      });
+    }, 1000);
+
+    // ----- 체크리스트 렌더링 -----
+    function autosizeSubLabel(input) {
+      const len = input.value.length;
+      input.size = Math.max(1, len || 1);
+    }
+
+    function renderChecklist() {
+      checklistContainer.innerHTML = '';
+
+      items.forEach((item) => {
+        if (currentCategoryFilter !== 'all') {
+          const c = (item.category || '').trim();
+          if (c !== currentCategoryFilter) return;
+        }
+
+        const row = document.createElement('div');
+        row.className = 'checklist-item';
+
+        const mainDiv = document.createElement('div');
+        mainDiv.className = 'check-main';
+
+        const textInput = document.createElement('input');
+        textInput.type = 'text';
+        textInput.className = 'item-text';
+        textInput.value = item.text;
+
+        textInput.addEventListener('input', () => {
+          item.text = textInput.value;
+          saveCurrentChecklistState();
+        });
+
+        mainDiv.appendChild(textInput);
+
+        const cat = (item.category || '').trim();
+        if (cat) {
+          const badge = document.createElement('span');
+          badge.className = 'category-badge';
+          badge.textContent = cat;
+          mainDiv.appendChild(badge);
+        }
+
+        const timerBox = document.createElement('div');
+        timerBox.className = 'timer-box';
+        timerBox.dataset.itemId = String(item.id);
+
+        const timeSpan = document.createElement('div');
+        timeSpan.className = 'timer-display';
+        timeSpan.dataset.itemId = String(item.id);
+        timeSpan.textContent = formatTime(item.totalSeconds || 0);
+
+        const timerBtn = document.createElement('button');
+        timerBtn.className = 'timer-btn';
+        timerBtn.textContent = runningTimers[String(item.id)] ? 'Stop' : 'Start';
+        if (runningTimers[String(item.id)]) {
+          timerBtn.classList.add('running');
+        }
+
+        timerBtn.addEventListener('click', () => {
+          toggleTimer(item.id);
+        });
+
+        timerBox.appendChild(timeSpan);
+        timerBox.appendChild(timerBtn);
+
+        const subGroup = document.createElement('div');
+        subGroup.className = 'subcheck-group';
+
+        const subRow = document.createElement('div');
+        subRow.className = 'subcheck-row';
+
+        item.subchecks.forEach((sub) => {
+          const subDiv = document.createElement('div');
+          subDiv.className = 'subcheck';
+
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = sub.checked;
+
+          cb.addEventListener('change', () => {
+            sub.checked = cb.checked;
+            saveCurrentChecklistState();
+            updateProgressAndGoals();
+          });
+
+          const labelInput = document.createElement('input');
+          labelInput.type = 'text';
+          labelInput.className = 'subcheck-label';
+          labelInput.value = sub.label || '';
+          autosizeSubLabel(labelInput);
+
+          labelInput.addEventListener('input', () => {
+            sub.label = labelInput.value;
+            autosizeSubLabel(labelInput);
+            saveCurrentChecklistState();
+          });
+
+          const delBtn = document.createElement('button');
+          delBtn.textContent = 'x';
+          delBtn.className = 'subcheck-delete';
+          delBtn.addEventListener('click', () => {
+            item.subchecks = item.subchecks.filter((sc) => sc.id !== sub.id);
+            saveCurrentChecklistState();
+            renderChecklist();
+            updateProgressAndGoals();
+          });
+
+          subDiv.appendChild(cb);
+          subDiv.appendChild(labelInput);
+          subDiv.appendChild(delBtn);
+
+          subRow.appendChild(subDiv);
+        });
+
+        const subAddBtn = document.createElement('button');
+        subAddBtn.textContent = '체크 추가';
+        subAddBtn.className = 'subcheck-add-btn';
+
+        subAddBtn.addEventListener('click', () => {
+          item.subchecks.push({
+            id: generateId(),
+            checked: false,
+            label: '',
+          });
+          saveCurrentChecklistState();
+          renderChecklist();
+          updateProgressAndGoals();
+        });
+
+        subGroup.appendChild(subRow);
+        subGroup.appendChild(subAddBtn);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = '삭제';
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.addEventListener('click', () => {
+          items = items.filter((it) => it.id !== item.id);
+          saveCurrentChecklistState();
+          renderChecklist();
+          updateProgressAndGoals();
+        });
+
+        row.appendChild(mainDiv);
+        row.appendChild(timerBox);
+        row.appendChild(subGroup);
+        row.appendChild(deleteBtn);
+
+        checklistContainer.appendChild(row);
+      });
+
+      updateProgressAndGoals();
+    }
+
+    // ----- 항목 추가 -----
+    function addTodo() {
+      const text = todoInput.value.trim();
+      if (!text) return;
+
+      let cat = '';
+      if (currentCategoryFilter !== 'all') {
+        cat = currentCategoryFilter;
+      } else {
+        const typedCat = categoryInput.value.trim();
+        if (typedCat) {
+          cat = typedCat;
+        }
+      }
+
+      const newItem = {
+        id: generateId(),
+        text,
+        category: cat,
+        totalSeconds: 0,
+        subchecks: [
+          {
+            id: generateId(),
+            checked: false,
+            label: '',
+          },
+        ],
+      };
+
+      items.push(newItem);
+      saveCurrentChecklistState();
+      renderChecklist();
+
+      todoInput.value = '';
+      todoInput.focus();
+    }
+
+    addTodoBtn.addEventListener('click', addTodo);
+    todoInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') addTodo();
+    });
+
+    // 입력창 토글
+    toggleBtn.addEventListener('click', () => {
+      const isHidden = todoBody.classList.toggle('hidden');
+      toggleBtn.textContent = isHidden ? '입력창 펼치기' : '입력창 접기';
+    });
+
+    // ----- Q&A(오답노트) -----
+    function loadQaItems() {
+      try {
+        const raw = localStorage.getItem(QA_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.map((it) => ({
+          id: it.id ?? generateId(),
+          question: it.question ?? '',
+          answer: it.answer ?? '',
+        }));
+      } catch (e) {
+        console.error('qa load error', e);
+        return [];
+      }
+    }
+
+    function saveQaItems() {
+      localStorage.setItem(QA_KEY, JSON.stringify(qaItems));
+    }
+
+    function renderQa() {
+      qaList.innerHTML = '';
+
+      qaItems.forEach((item) => {
+        const box = document.createElement('div');
+        box.className = 'qa-item';
+
+        const q = document.createElement('div');
+        q.className = 'qa-question-text';
+        q.textContent = item.question || '(질문 없음)';
+
+        const a = document.createElement('div');
+        a.className = 'qa-answer-text';
+        a.textContent = item.answer || '';
+
+        const del = document.createElement('button');
+        del.textContent = '삭제';
+        del.className = 'qa-delete-btn';
+        del.addEventListener('click', () => {
+          qaItems = qaItems.filter((it) => it.id !== item.id);
+          saveQaItems();
+          renderQa();
+          pickRandomQa();
+        });
+
+        box.appendChild(q);
+        box.appendChild(a);
+        box.appendChild(del);
+
+        qaList.appendChild(box);
+      });
+    }
+
+    function addQaItem() {
+      const q = qaQuestionInput.value.trim();
+      const a = qaAnswerInput.value.trim();
+      if (!q && !a) return;
+
+      qaItems.push({
+        id: generateId(),
+        question: q,
+        answer: a,
+      });
+      saveQaItems();
+      renderQa();
+      pickRandomQa();
+
+      qaQuestionInput.value = '';
+      qaAnswerInput.value = '';
+      qaQuestionInput.focus();
+    }
+
+    qaAddBtn.addEventListener('click', addQaItem);
+    qaAnswerInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        addQaItem();
+      }
+    });
+
+    // 랜덤 Q&A
+    function pickRandomQa() {
+      if (!qaItems.length) {
+        qaRandomBox.classList.add('hidden');
+        return;
+      }
+      const idx = Math.floor(Math.random() * qaItems.length);
+      const item = qaItems[idx];
+      qaRandomQuestion.textContent = item.question || '(질문 없음)';
+      qaRandomAnswer.textContent = item.answer || '';
+      qaRandomBox.classList.remove('hidden');
+    }
+
+    qaRandomRefresh.addEventListener('click', pickRandomQa);
+
+    // Q&A 버튼 → Q&A 화면 전환
+    qaBtn.addEventListener('click', () => {
+      if (activeTab === 'qa') return;
+
+      if (activeTab === 'day') {
+        saveCurrentChecklistState();
+      }
+
+      activeTab = 'qa';
+      tabButtons.forEach((b) => b.classList.remove('active'));
+
+      checklistSection.classList.add('hidden');
+      monthSection.classList.add('hidden');
+      qaSection.classList.remove('hidden');
+
+      updateDateDisplay();
+      qaItems = loadQaItems();
+      renderQa();
+      pickRandomQa();
+    });
+
+    // ----- 백업 / 복원 기능 -----
+    function exportBackup() {
+      const backup = {
+        generatedAt: new Date().toISOString(),
+        daily: {},
+        qa: [],
+        categories: [],
+      };
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(DAILY_PREFIX)) {
+          try {
+            backup.daily[key] = JSON.parse(localStorage.getItem(key));
+          } catch (e) {
+            console.error('backup daily parse error', key, e);
+          }
+        }
+      }
+
+      try {
+        const qaRaw = localStorage.getItem(QA_KEY);
+        backup.qa = qaRaw ? JSON.parse(qaRaw) : [];
+      } catch (e) {
+        console.error('backup qa parse error', e);
+      }
+
+      try {
+        const catRaw = localStorage.getItem(CATEGORIES_KEY);
+        backup.categories = catRaw ? JSON.parse(catRaw) : [];
+      } catch (e) {
+        console.error('backup categories parse error', e);
+      }
+
+      const blob = new Blob([JSON.stringify(backup, null, 2)], {
+        type: 'application/json',
+      });
+
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const d = String(today.getDate()).padStart(2, '0');
+      const fileName = `StudyLogBackup_${y}-${m}-${d}.json`;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      alert('백업 파일을 저장했습니다!');
+    }
+
+    function importBackup(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target.result;
+          const backup = JSON.parse(text);
+
+          if (backup.daily && typeof backup.daily === 'object') {
+            Object.keys(backup.daily).forEach((key) => {
+              localStorage.setItem(key, JSON.stringify(backup.daily[key]));
+            });
+          }
+
+          if (Array.isArray(backup.qa)) {
+            localStorage.setItem(QA_KEY, JSON.stringify(backup.qa));
+          }
+
+          if (Array.isArray(backup.categories)) {
+            localStorage.setItem(CATEGORIES_KEY, JSON.stringify(backup.categories));
+          }
+
+          alert('백업 데이터를 복원했습니다. 페이지를 새로고침합니다.');
+          location.reload();
+        } catch (err) {
+          console.error('backup import error', err);
+          alert('백업 파일을 읽는 중 오류가 발생했습니다.');
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    backupExportBtn.addEventListener('click', () => {
+      exportBackup();
+    });
+
+    backupImportBtn.addEventListener('click', () => {
+      backupFileInput.click();
+    });
+
+    backupFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      importBackup(file);
+      e.target.value = '';
+    });
+
+    // ----- 월별 캘린더 & 리포트 -----
+    function renderMonthView() {
+      calendarEl.innerHTML = '';
+      monthReportEl.innerHTML = '';
+
+      const year = yyyy;
+      const monthIndex = now.getMonth();
+      const firstDay = new Date(year, monthIndex, 1);
+      const startWeekday = firstDay.getDay();
+      const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+
+      let html = '<table class="calendar-grid"><thead><tr>';
+      const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+      weekdays.forEach((d) => {
+        html += `<th>${d}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      let day = 1;
+      for (let week = 0; week < 6; week++) {
+        html += '<tr>';
+        for (let wd = 0; wd < 7; wd++) {
+          if ((week === 0 && wd < startWeekday) || day > daysInMonth) {
+            html += '<td class="calendar-empty"></td>';
+          } else {
+            const dStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const state = loadChecklistStateFor(dStr);
+
+            let totalSub = 0;
+            let doneSub = 0;
+            state.items.forEach((it) => {
+              const subs = it.subchecks || [];
+              totalSub += subs.length;
+              doneSub += subs.filter((sc) => sc.checked).length;
+            });
+            const percent = totalSub > 0 ? Math.round((doneSub / totalSub) * 100) : 0;
+            const hasStudy = state.items.length > 0;
+
+            const isToday = dStr === todayString;
+            const cls = isToday ? 'today-cell' : '';
+            const summary = hasStudy
+              ? `<div class="calendar-day-summary">${doneSub}/${totalSub} (${percent}%)</div>`
+              : `<div class="calendar-day-summary">-</div>`;
+
+            html += `<td class="${cls}" data-date="${dStr}">
+                      <div class="calendar-day-number">${day}</div>
+                      ${summary}
+                     </td>`;
+            day++;
+          }
+        }
+        html += '</tr>';
+        if (day > daysInMonth) break;
+      }
+
+      html += '</tbody></table>';
+      calendarEl.innerHTML = html;
+
+      // 달력 날짜 클릭 → 해당 날짜의 day 뷰로 이동
+      calendarEl.querySelectorAll('td[data-date]').forEach((td) => {
+        td.addEventListener('click', () => {
+          const d = td.getAttribute('data-date');
+          if (activeTab === 'day') {
+            saveCurrentChecklistState();
+          }
+          selectedDateStr = d;
+          activeTab = 'day';
+          tabButtons.forEach((b) => {
+            b.classList.toggle('active', b.dataset.tab === 'day');
+          });
+          monthSection.classList.add('hidden');
+          qaSection.classList.add('hidden');
+          checklistSection.classList.remove('hidden');
+
+          const st = loadChecklistStateFor(selectedDateStr);
+          applyChecklistState(st);
+          updateDateDisplay();
+        });
+      });
+
+      // 월별 리포트
+      let monthTotalSub = 0;
+      let monthDoneSub = 0;
+      let monthTotalSeconds = 0;
+      let daysWithStudy = 0;
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const state = loadChecklistStateFor(dStr);
+        if (state.items.length > 0) {
+          daysWithStudy++;
+          state.items.forEach((it) => {
+            const subs = it.subchecks || [];
+            monthTotalSub += subs.length;
+            monthDoneSub += subs.filter((sc) => sc.checked).length;
+            monthTotalSeconds += it.totalSeconds || 0;
+          });
+        }
+      }
+
+      const monthPercent = monthTotalSub > 0 ? Math.round((monthDoneSub / monthTotalSub) * 100) : 0;
+      const totalMinutes = Math.floor(monthTotalSeconds / 60);
+      const hh = Math.floor(totalMinutes / 60);
+      const mmRem = totalMinutes % 60;
+
+      monthReportEl.innerHTML = `
+        <div><strong>${year}-${String(monthIndex + 1).padStart(2, '0')}</strong> 리포트</div>
+        <div>완료도: ${monthDoneSub} / ${monthTotalSub} (${monthPercent || 0}%)</div>
+        <div>총 공부 시간: ${hh}시간 ${mmRem}분</div>
+        <div>공부한 날 수: ${daysWithStudy}일</div>
+      `;
+    }
+
+    // ----- 탭 전환 -----
+    tabButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        if (tab === activeTab) return;
+
+        if (activeTab === 'day') {
+          saveCurrentChecklistState();
+        } else if (activeTab === 'qa') {
+          saveQaItems();
+        }
+
+        activeTab = tab;
+        tabButtons.forEach((b) => {
+          b.classList.toggle('active', b === btn);
+        });
+
+        if (activeTab === 'day') {
+          checklistSection.classList.remove('hidden');
+          monthSection.classList.add('hidden');
+          qaSection.classList.add('hidden');
+
+          const state = loadChecklistStateFor(selectedDateStr);
+          applyChecklistState(state);
+        } else if (activeTab === 'month') {
+          checklistSection.classList.add('hidden');
+          monthSection.classList.remove('hidden');
+          qaSection.classList.add('hidden');
+          renderMonthView();
+        }
+
+        updateDateDisplay();
+      });
+    });
+
+    // ----- 초기 로드 -----
+    function init() {
+      storedCategories = loadCategories();
+      updateDateDisplay();
+      const state = loadChecklistStateFor(selectedDateStr);
+      applyChecklistState(state);
+      qaItems = loadQaItems();
+      refreshCategoryFilterOptions();
+    }
+
+    init();
+  </script>
+</body>
+</html>
