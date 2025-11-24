@@ -701,6 +701,17 @@
   </div>
 
   <script>
+
+(async () => {
+      if (navigator.storage && navigator.storage.persist) {
+        const isPersisted = await navigator.storage.persisted();
+        if (!isPersisted) {
+          await navigator.storage.persist();
+        }
+      }
+    })();
+
+
     // 오늘 날짜 계산
     const now = new Date();
     const yyyy = now.getFullYear();
