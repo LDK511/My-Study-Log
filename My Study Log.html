@@ -875,7 +875,80 @@
       });
     }
 
-    function loadChecklistStateFor(dateStr) {
+    
+    // ----- 날짜 헬퍼 & 어제 미완료 항목 이월 -----
+    function getOffsetDateString(dateStr, offsetDays) {
+      const parts = dateStr.split('-').map(Number);
+      if (parts.length !== 3) return null;
+      const [y, m, d] = parts;
+      const dt = new Date(y, m - 1, d + offsetDays);
+      const ny = dt.getFullYear();
+      const nm = String(dt.getMonth() + 1).padStart(2, '0');
+      const nd = String(dt.getDate()).padStart(2, '0');
+      return `${ny}-${nm}-${nd}`;
+    }
+
+    function carryOverIncompleteTasksFromYesterday(dateStr) {
+      const prevDateStr = getOffsetDateString(dateStr, -1);
+      if (!prevDateStr) return;
+
+      const prevState = loadChecklistStateFor(prevDateStr);
+      if (!prevState || !Array.isArray(prevState.items) || !prevState.items.length) return;
+
+      let added = false;
+
+      prevState.items.forEach((prevItem) => {
+        const subs = Array.isArray(prevItem.subchecks) ? prevItem.subchecks : [];
+        const total = subs.length;
+        const done = subs.filter((sc) => sc.checked).length;
+        const incomplete = total === 0 || done < total;
+
+        if (!incomplete) return;
+
+        const prevText = prevItem.text || '';
+        const prevCat = (prevItem.category || '').trim();
+
+        const exists = items.some(
+          (it) =>
+            (it.text || '') === prevText &&
+            (it.category || '').trim() === prevCat
+        );
+        if (exists) return;
+
+        const clonedSubs =
+          subs.length > 0
+            ? subs.map((sc) => ({
+                id: generateId(),
+                checked: !!sc.checked,
+                label: sc.label || '',
+              }))
+            : [
+                {
+                  id: generateId(),
+                  checked: false,
+                  label: '',
+                },
+              ];
+
+        const newItem = {
+          id: generateId(),
+          text: prevText,
+          category: prevCat,
+          totalSeconds: prevItem.totalSeconds || 0,
+          subchecks: clonedSubs,
+        };
+
+        items.push(newItem);
+        added = true;
+      });
+
+      if (added) {
+        saveCurrentChecklistState();
+        renderChecklist();
+      }
+    }
+
+function loadChecklistStateFor(dateStr) {
       try {
         const raw = localStorage.getItem(DAILY_PREFIX + dateStr);
         if (!raw) {
@@ -1505,6 +1578,7 @@
           const text = e.target.result;
           const backup = JSON.parse(text);
 
+          // 1) 날짜별 데이터, Q&A, 카테고리 복원
           if (backup.daily && typeof backup.daily === 'object') {
             Object.keys(backup.daily).forEach((key) => {
               localStorage.setItem(key, JSON.stringify(backup.daily[key]));
@@ -1519,6 +1593,36 @@
             localStorage.setItem(CATEGORIES_KEY, JSON.stringify(backup.categories));
           }
 
+          // 2) 백업 생성 당시 날짜의 daily 상태를 오늘 날짜에도 매핑
+          try {
+            const todayKey = DAILY_PREFIX + todayString;
+            let baseState = null;
+
+            if (backup.daily && typeof backup.daily === 'object') {
+              const dailyKeys = Object.keys(backup.daily);
+
+              if (backup.generatedAt) {
+                const genDate = backup.generatedAt.slice(0, 10); // YYYY-MM-DD
+                const matchedKey =
+                  dailyKeys.find((k) => k.includes(genDate)) ||
+                  (DAILY_PREFIX + genDate in backup.daily ? DAILY_PREFIX + genDate : null);
+                if (matchedKey && backup.daily[matchedKey]) {
+                  baseState = backup.daily[matchedKey];
+                }
+              }
+
+              if (!baseState && dailyKeys.length > 0) {
+                baseState = backup.daily[dailyKeys[0]];
+              }
+            }
+
+            if (baseState) {
+              localStorage.setItem(todayKey, JSON.stringify(baseState));
+            }
+          } catch (mapErr) {
+            console.error('backup-to-today mapping error', mapErr);
+          }
+
           alert('백업 데이터를 복원했습니다. 페이지를 새로고침합니다.');
           location.reload();
         } catch (err) {
@@ -1528,7 +1632,6 @@
       };
       reader.readAsText(file, 'utf-8');
     }
-
     backupExportBtn.addEventListener('click', () => {
       exportBackup();
     });
@@ -1698,6 +1801,12 @@
       updateDateDisplay();
       const state = loadChecklistStateFor(selectedDateStr);
       applyChecklistState(state);
+
+      // 오늘 날짜라면 어제의 미완료 항목을 이월
+      if (selectedDateStr === todayString) {
+        carryOverIncompleteTasksFromYesterday(selectedDateStr);
+      }
+
       qaItems = loadQaItems();
       refreshCategoryFilterOptions();
     }
